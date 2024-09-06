@@ -20,7 +20,7 @@ const Postagem = conn.define(
       required: true,
     },
     autor: {
-      type: DataTypes.DATE,
+      type: DataTypes.STRING,
       allowNull: false,
       required: true,
     },

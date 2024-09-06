@@ -24,16 +24,15 @@ const getTarefaPorSituacaoSchema = z.object({
   situacao: z.enum(["pendente", "concluida"]),
 });
 
-const updateTarefaSchema = z.object({
-  tarefa: z
+const updatePostagemSchema = z.object({
+  titulo: z
     .string()
-    .min(3, { message: "a postagem deve ter pelo menos 3 caracteres" })
+    .min(3, { message: "titulo deve ter pelo menos 3 caracteres" })
     .transform((txt) => txt.toLowerCase()),
-  descricao: z
+  conteudo: z
     .string()
     .min(5, { message: "descricao deve ter pelo menos 5 caracteres" })
     .transform((txt) => txt.toLowerCase()),
-  situacao: z.enum(["pendente", "concluida"]),
 });
 
 //*blog?page=1&limit=10 -OK
@@ -64,7 +63,7 @@ export const getAll = async (request, response) => {
   }
 };
 
-//*feita
+//*OK
 export const create = async (request, response) => {
   //*IMPLEMENTAR A VALIDAÇÃO
   const bodyValidation = createSchema.safeParse(request.body);
@@ -77,7 +76,7 @@ export const create = async (request, response) => {
     return;
   }
 
-  const { titulo, conteudo, autor } = request.body;
+  const { titulo, conteudo, autor, imagem } = request.body;
 
   if (!titulo) {
     response.status(400).json({ err: "a titulo é obrigatória" });
@@ -96,6 +95,7 @@ export const create = async (request, response) => {
     titulo,
     conteudo,
     autor,
+    imagem,
   };
   try {
     await Postagem.create(novaTarefa);
@@ -105,8 +105,8 @@ export const create = async (request, response) => {
     response.status(500).json({ message: "erro ao cadastrar Postagem" });
   }
 };
-//*precisa de validação
-export const getTarefa = async (request, response) => {
+//*OK
+export const getPostagem = async (request, response) => {
   const paramValidator = getSchema.safeParse(request.params);
   if (!paramValidator.success) {
     response.status(400).json({
@@ -128,7 +128,7 @@ export const getTarefa = async (request, response) => {
   }
 };
 //*precisa de validação
-export const updateTarefa = async (request, response) => {
+export const updatePostagem = async (request, response) => {
   const paramValidator = getSchema.safeParse(request.params);
   if (!paramValidator.success) {
     response.status(400).json({
@@ -137,7 +137,7 @@ export const updateTarefa = async (request, response) => {
     });
     return;
   }
-  const updateValidator = updateTarefaSchema.safeParse(request.body);
+  const updateValidator = updatePostagemSchema.safeParse(request.body);
   if (!updateValidator.success) {
     response.status(400).json({
       message: "dados para atualização estão incorretos",
@@ -146,25 +146,25 @@ export const updateTarefa = async (request, response) => {
     return;
   }
   const { id } = request.params;
-  const { tarefa, descricao, status } = request.body;
+  const { titulo, conteudo, imagem } = request.body;
 
-  const tarefaAtualizada = {
-    tarefa,
-    descricao,
-    status,
+  const postagemAtualizada = {
+    titulo,
+    conteudo,
+    imagem,
   };
   try {
-    const [linhasAfetadas] = await Tarefa.update(tarefaAtualizada, {
+    const [linhasAfetadas] = await Postagem.update(postagemAtualizada, {
       where: { id },
     });
     if (linhasAfetadas <= 0) {
-      response.status(404).json({ message: "tarefa não encontrada" });
+      response.status(404).json({ message: "postagem não encontrada" });
       return;
     }
 
-    response.status(200).json({ message: "tarefa atualiza" });
+    response.status(200).json({ message: "postagem atualizada" });
   } catch (error) {
-    response.status(200).json({ message: "erro ao atualizar tarefa" });
+    response.status(200).json({ message: "erro ao atualizar postagem" });
   }
 };
 //*precisa de validação
