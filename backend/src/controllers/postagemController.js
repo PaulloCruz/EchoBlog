@@ -116,7 +116,7 @@ export const getPostagem = async (request, response) => {
     response.status(500).json({ message: "erro ao buscar postagem" });
   }
 };
-//*precisa de validação
+//*Ok
 export const updatePostagem = async (request, response) => {
   const paramValidator = getSchema.safeParse(request.params);
   if (!paramValidator.success) {
@@ -150,61 +150,55 @@ export const updatePostagem = async (request, response) => {
   }
 };
 //*precisa de validação
-export const updateStatusTarefa = async (request, response) => {
+export const DeletePostagem = async (request, response) => {
   const paramValidator = getSchema.safeParse(request.params);
   if (!paramValidator.success) {
     response.status(400).json({
-      message: "número de identifcação está inválido",
+      message: "número de identificação está inválido",
       detalhes: formatZodError(paramValidator.error),
     });
     return;
   }
   const { id } = request.params;
   try {
-    const tarefa = await Tarefa.findOne({ raw: true, where: { id } });
-    if (tarefa === null) {
-      response.status(404).json({ message: "tarefa não encontrada" });
+    const linhasAfetadas = await Postagem.destroy({
+      where: { id },
+    });
+    if (linhasAfetadas === 0) {
+      response.status(404).json({ message: "postagem não encontrada" });
       return;
     }
-    if (tarefa.status === "pendente") {
-      await Tarefa.update({ status: "concluida" }, { where: { id: id } });
-    } else if (tarefa.status === "concluida") {
-      await Tarefa.update({ status: "pendente" }, { where: { id: id } });
-      //*
-    }
-    const tarefaAtualizada = await Tarefa.findOne({ raw: true, where: { id } });
-    response.status(200).json(tarefaAtualizada);
+    response.status(200).json({ message: "postagem deletada" });
   } catch (error) {
     console.error(error);
-    response.status(500).json({ message: "erro ao atualizar tarefa" });
+    response.status(500).json({ message: "erro ao deletar postagem" });
   }
 };
-//*precisa de validação
-export const getTarefaPorSituacao = async (request, response) => {
-  const situacaoValidation = getTarefaPorSituacaoSchema.safeParse(
-    request.params
-  );
-  if (!situacaoValidation.success) {
-    response.status(400).json({
-      message: "Situação inválida",
-      details: formatZodError(situacaoValidation.error),
-    });
-    return;
-  }
-  const { situacao } = request.params;
-  if (situacao !== "pendente" && situacao !== "concluida") {
-    response
-      .status(400)
-      .json({ message: "Situação inválida. Use 'pendente' ou 'concluida'" });
-    return;
-  }
+export const UploadImagemPostagem = async (request, response) => {
   try {
-    const tarefas = await Tarefa.findAll({
-      where: { status: situacao },
-      raw: true,
-    });
-    response.status(200).json(tarefas);
+    const { id } = request.params;
+    if (!request.file) {
+      return response.status(400).json({ error: "imagem não enviada" });
+    }
+    const post = await Postagem.findByPk(id);
+    if (!post) {
+      return response.status(404).json({ message: "postagem nao encontrada" });
+    }
+    post.imagem = `/uploads/images/${request.file.filename}`;
+    await post.save();
+    response
+      .status(200)
+      .json({ message: "imagem enviada com sucesso", imagem: post.imagem });
   } catch (error) {
-    response.status(500).json({ err: "erro ao buscar tarefas" });
+    if (error instanceof z.ZodError) {
+      return response.status(400).json({
+        errors: error.errors.map((err) => ({
+          path: err.path,
+          message: err.message,
+        })),
+      });
+    }
+    console.error(error);
+    response.status(500).json({ error: "erro ao enviar a imagem" });
   }
 };
