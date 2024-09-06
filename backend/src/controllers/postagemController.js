@@ -24,17 +24,6 @@ const getTarefaPorSituacaoSchema = z.object({
   situacao: z.enum(["pendente", "concluida"]),
 });
 
-const updatePostagemSchema = z.object({
-  titulo: z
-    .string()
-    .min(3, { message: "titulo deve ter pelo menos 3 caracteres" })
-    .transform((txt) => txt.toLowerCase()),
-  conteudo: z
-    .string()
-    .min(5, { message: "descricao deve ter pelo menos 5 caracteres" })
-    .transform((txt) => txt.toLowerCase()),
-});
-
 //*blog?page=1&limit=10 -OK
 export const getAll = async (request, response) => {
   const page = parseInt(request.query.page) || 1;
@@ -137,14 +126,7 @@ export const updatePostagem = async (request, response) => {
     });
     return;
   }
-  const updateValidator = updatePostagemSchema.safeParse(request.body);
-  if (!updateValidator.success) {
-    response.status(400).json({
-      message: "dados para atualização estão incorretos",
-      details: formatZodError(updateValidator.error),
-    });
-    return;
-  }
+
   const { id } = request.params;
   const { titulo, conteudo, imagem } = request.body;
 
