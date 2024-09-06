@@ -36,7 +36,7 @@ const updateTarefaSchema = z.object({
   situacao: z.enum(["pendente", "concluida"]),
 });
 
-//*blog?page=1&limit=10
+//*blog?page=1&limit=10 -OK
 export const getAll = async (request, response) => {
   const page = parseInt(request.query.page) || 1;
   const limit = parseInt(request.query.limit) || 10;
@@ -117,16 +117,14 @@ export const getTarefa = async (request, response) => {
   }
   const { id } = request.params;
   try {
-    // const tarefa = await Tarefa.findByPk(id);
-    // OBJETO;
-    const tarefa = await Tarefa.findOne({ where: { id } });
-    if (tarefa === null) {
-      response.status(404).json({ message: "tarefa não encontrada" });
+    const postagem = await Postagem.findOne({ where: { id } });
+    if (postagem === null) {
+      response.status(404).json({ message: "postagem não encontrada" });
       return;
     }
-    response.status(200).json(tarefa);
+    response.status(200).json(postagem);
   } catch (error) {
-    response.status(500).json({ message: "erro ao buscar tarefa" });
+    response.status(500).json({ message: "erro ao buscar postagem" });
   }
 };
 //*precisa de validação
